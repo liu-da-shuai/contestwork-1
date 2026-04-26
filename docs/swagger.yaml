@@ -1,0 +1,11 @@
+basePath: /
+host: localhost:8080
+info:
+  contact:
+    name: 后端开发
+  description: 分组项目后端接口文档 | 项目名：contestwork-1
+  termsOfService: http://localhost:8080
+  title: contestwork-1 教学竞赛系统接口文档
+  version: "1.0"
+paths: {}
+swagger: "2.0"
