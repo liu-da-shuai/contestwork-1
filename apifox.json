@@ -1,0 +1,944 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "教学竞赛系统API",
+    "description": "教学竞赛系统后端API接口文档",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "本地开发服务器"
+    }
+  ],
+  "tags": [
+    { "name": "用户管理", "description": "用户登录、注册、权限管理" },
+    { "name": "竞赛管理", "description": "竞赛的增删改查" },
+    { "name": "报名管理", "description": "报名信息管理" },
+    { "name": "评审管理", "description": "评审记录管理" },
+    { "name": "盲审机制", "description": "盲审任务分配与提交" },
+    { "name": "获奖管理", "description": "获奖信息管理" },
+    { "name": "附件管理", "description": "文件上传下载" },
+    { "name": "统计功能", "description": "数据统计分析" },
+    { "name": "进度查询", "description": "评审进度查询" },
+    { "name": "打印功能", "description": "打印报名信息" },
+    { "name": "数据备份", "description": "数据库备份与恢复" },
+    { "name": "作品查重", "description": "作品相似度检测" },
+    { "name": "多轮评审", "description": "多轮次评审流程" }
+  ],
+  "paths": {
+    "/login": {
+      "post": {
+        "tags": ["用户管理"],
+        "summary": "用户登录",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": { "type": "string", "example": "admin" },
+                  "password": { "type": "string", "example": "123456" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登录成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "integer", "example": 1 },
+                    "msg": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "integer" },
+                        "username": { "type": "string" },
+                        "name": { "type": "string" },
+                        "role": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/register": {
+      "post": {
+        "tags": ["用户管理"],
+        "summary": "用户注册",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password", "name", "role"],
+                "properties": {
+                  "username": { "type": "string", "example": "teacher01" },
+                  "password": { "type": "string", "example": "123456" },
+                  "name": { "type": "string", "example": "张老师" },
+                  "role": { "type": "string", "enum": ["admin", "teacher", "reviewer"], "example": "teacher" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "注册成功" } }
+      }
+    },
+    "/admin/user": {
+      "get": {
+        "tags": ["用户管理"],
+        "summary": "获取用户列表",
+        "responses": { "200": { "description": "成功" } }
+      },
+      "put": {
+        "tags": ["用户管理"],
+        "summary": "更新用户信息",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": { "type": "integer", "example": 1 },
+                  "name": { "type": "string", "example": "新姓名" },
+                  "role": { "type": "string", "example": "teacher" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/admin/user/{id}": {
+      "get": {
+        "tags": ["用户管理"],
+        "summary": "获取用户详情",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      },
+      "delete": {
+        "tags": ["用户管理"],
+        "summary": "删除用户",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/admin/user/password": {
+      "put": {
+        "tags": ["用户管理"],
+        "summary": "修改用户密码",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id", "password"],
+                "properties": {
+                  "id": { "type": "integer", "example": 1 },
+                  "password": { "type": "string", "example": "newpassword" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/admin/user/role": {
+      "get": {
+        "tags": ["用户管理"],
+        "summary": "按角色获取用户列表",
+        "parameters": [
+          { "name": "role", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/contest/list": {
+      "get": {
+        "tags": ["竞赛管理"],
+        "summary": "获取竞赛列表",
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/contest/detail/{id}": {
+      "get": {
+        "tags": ["竞赛管理"],
+        "summary": "获取竞赛详情",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/contest/add": {
+      "post": {
+        "tags": ["竞赛管理"],
+        "summary": "创建竞赛",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": { "type": "string", "example": "2024年度教学竞赛" },
+                  "time": { "type": "string", "example": "2024-05-01" },
+                  "status": { "type": "string", "example": "进行中" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/contest/update": {
+      "put": {
+        "tags": ["竞赛管理"],
+        "summary": "更新竞赛",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": { "type": "integer", "example": 1 },
+                  "title": { "type": "string", "example": "2024年度教学竞赛" },
+                  "time": { "type": "string", "example": "2024-05-01" },
+                  "status": { "type": "string", "example": "已结束" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/contest/delete/{id}": {
+      "delete": {
+        "tags": ["竞赛管理"],
+        "summary": "删除竞赛",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/contest/status": {
+      "get": {
+        "tags": ["竞赛管理"],
+        "summary": "按状态获取竞赛列表",
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/contest/search": {
+      "get": {
+        "tags": ["竞赛管理"],
+        "summary": "按关键词搜索竞赛",
+        "parameters": [
+          { "name": "keyword", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/signup/add": {
+      "post": {
+        "tags": ["报名管理"],
+        "summary": "创建报名",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["contest_title", "teacher_name"],
+                "properties": {
+                  "contest_title": { "type": "string", "example": "2024年度教学竞赛" },
+                  "teacher_name": { "type": "string", "example": "张老师" },
+                  "unit": { "type": "string", "example": "数学学院" },
+                  "phone": { "type": "string", "example": "13800138000" },
+                  "course_name": { "type": "string", "example": "高等数学" },
+                  "grade": { "type": "string", "example": "大三" },
+                  "desc": { "type": "string", "example": "教学方案设计..." }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/signup/list": {
+      "get": {
+        "tags": ["报名管理"],
+        "summary": "获取报名列表",
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/signup/detail/{id}": {
+      "get": {
+        "tags": ["报名管理"],
+        "summary": "获取报名详情",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/signup/update": {
+      "put": {
+        "tags": ["报名管理"],
+        "summary": "更新报名",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": { "type": "integer", "example": 1 },
+                  "course_name": { "type": "string", "example": "线性代数" },
+                  "grade": { "type": "string", "example": "大二" },
+                  "desc": { "type": "string", "example": "更新后的设计简介" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/signup/delete/{id}": {
+      "delete": {
+        "tags": ["报名管理"],
+        "summary": "删除报名",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/signup/contest": {
+      "get": {
+        "tags": ["报名管理"],
+        "summary": "按竞赛获取报名列表",
+        "parameters": [
+          { "name": "contest_title", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/signup/teacher": {
+      "get": {
+        "tags": ["报名管理"],
+        "summary": "按教师获取报名列表",
+        "parameters": [
+          { "name": "teacher_name", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/attachment/upload": {
+      "post": {
+        "tags": ["附件管理"],
+        "summary": "单文件上传",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "signup_id"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary" },
+                  "signup_id": { "type": "integer", "example": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/attachment/upload-multiple": {
+      "post": {
+        "tags": ["附件管理"],
+        "summary": "多文件上传",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["files", "signup_id"],
+                "properties": {
+                  "files": { "type": "array", "items": { "type": "string", "format": "binary" } },
+                  "signup_id": { "type": "integer", "example": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/attachment/list": {
+      "get": {
+        "tags": ["附件管理"],
+        "summary": "获取附件列表",
+        "parameters": [
+          { "name": "signup_id", "in": "query", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/attachment/download/{id}": {
+      "get": {
+        "tags": ["附件管理"],
+        "summary": "下载附件",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/attachment/delete/{id}": {
+      "delete": {
+        "tags": ["附件管理"],
+        "summary": "删除附件",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/blind-review/assign": {
+      "post": {
+        "tags": ["盲审机制"],
+        "summary": "分配盲审任务",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["contest_title", "reviewer_ids"],
+                "properties": {
+                  "contest_title": { "type": "string", "example": "2024年度教学竞赛" },
+                  "reviewer_ids": { "type": "array", "items": { "type": "integer" }, "example": [2, 3, 4] }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/blind-review/list": {
+      "get": {
+        "tags": ["盲审机制"],
+        "summary": "获取评审员盲审任务",
+        "parameters": [
+          { "name": "reviewer_id", "in": "query", "required": true, "schema": { "type": "integer" } },
+          { "name": "contest_title", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/blind-review/detail/{id}": {
+      "get": {
+        "tags": ["盲审机制"],
+        "summary": "获取盲审详情",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/blind-review/submit": {
+      "post": {
+        "tags": ["盲审机制"],
+        "summary": "提交盲审评分",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id", "score"],
+                "properties": {
+                  "id": { "type": "integer", "example": 1 },
+                  "score": { "type": "integer", "minimum": 0, "maximum": 100, "example": 88 },
+                  "comment": { "type": "string", "example": "内容详实，设计合理" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/blind-review/progress": {
+      "get": {
+        "tags": ["盲审机制"],
+        "summary": "查询盲审进度",
+        "parameters": [
+          { "name": "contest_title", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/award/add": {
+      "post": {
+        "tags": ["获奖管理"],
+        "summary": "添加获奖记录",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["contest_title", "teacher_name", "title"],
+                "properties": {
+                  "contest_title": { "type": "string", "example": "2024年度教学竞赛" },
+                  "teacher_name": { "type": "string", "example": "张老师" },
+                  "title": { "type": "string", "example": "一等奖" },
+                  "time": { "type": "string", "example": "2024-06-01" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/award/list": {
+      "get": {
+        "tags": ["获奖管理"],
+        "summary": "获取获奖列表",
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/award/detail/{id}": {
+      "get": {
+        "tags": ["获奖管理"],
+        "summary": "获取获奖详情",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/award/update": {
+      "put": {
+        "tags": ["获奖管理"],
+        "summary": "更新获奖记录",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": { "type": "integer", "example": 1 },
+                  "title": { "type": "string", "example": "特等奖" },
+                  "time": { "type": "string", "example": "2024-06-01" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/award/delete/{id}": {
+      "delete": {
+        "tags": ["获奖管理"],
+        "summary": "删除获奖记录",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/award/teacher": {
+      "get": {
+        "tags": ["获奖管理"],
+        "summary": "按教师获取获奖列表",
+        "parameters": [
+          { "name": "teacher_name", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/statistics/contest": {
+      "get": {
+        "tags": ["统计功能"],
+        "summary": "竞赛统计",
+        "parameters": [
+          { "name": "contest_title", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/statistics/teacher": {
+      "get": {
+        "tags": ["统计功能"],
+        "summary": "教师统计",
+        "parameters": [
+          { "name": "teacher_name", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/statistics/overall": {
+      "get": {
+        "tags": ["统计功能"],
+        "summary": "整体统计",
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/progress/review": {
+      "get": {
+        "tags": ["进度查询"],
+        "summary": "查询竞赛评审进度",
+        "parameters": [
+          { "name": "contest_title", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/progress/contests": {
+      "get": {
+        "tags": ["进度查询"],
+        "summary": "查询所有竞赛评审进度",
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/progress/teacher": {
+      "get": {
+        "tags": ["进度查询"],
+        "summary": "查询教师报名评审进度",
+        "parameters": [
+          { "name": "teacher_name", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/print/signup": {
+      "get": {
+        "tags": ["打印功能"],
+        "summary": "打印报名信息",
+        "parameters": [
+          { "name": "id", "in": "query", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/print/signup-list": {
+      "get": {
+        "tags": ["打印功能"],
+        "summary": "打印报名名单",
+        "parameters": [
+          { "name": "contest_title", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/personal/center": {
+      "get": {
+        "tags": ["个人中心"],
+        "summary": "个人中心页面",
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/backup/create": {
+      "post": {
+        "tags": ["数据备份"],
+        "summary": "创建数据库备份",
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/backup/list": {
+      "get": {
+        "tags": ["数据备份"],
+        "summary": "获取备份文件列表",
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/backup/download": {
+      "get": {
+        "tags": ["数据备份"],
+        "summary": "下载备份文件",
+        "parameters": [
+          { "name": "filename", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/backup/delete": {
+      "delete": {
+        "tags": ["数据备份"],
+        "summary": "删除备份文件",
+        "parameters": [
+          { "name": "filename", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/backup/restore": {
+      "post": {
+        "tags": ["数据备份"],
+        "summary": "恢复数据库",
+        "parameters": [
+          { "name": "filename", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/plagiarism/create": {
+      "post": {
+        "tags": ["作品查重"],
+        "summary": "创建查重任务",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["signup_id"],
+                "properties": {
+                  "signup_id": { "type": "integer", "example": 1 },
+                  "contest_title": { "type": "string", "example": "2024年度教学竞赛" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/plagiarism/list": {
+      "get": {
+        "tags": ["作品查重"],
+        "summary": "获取查重任务列表",
+        "parameters": [
+          { "name": "contest_title", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/plagiarism/detail/{id}": {
+      "get": {
+        "tags": ["作品查重"],
+        "summary": "获取查重详情",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/plagiarism/results": {
+      "get": {
+        "tags": ["作品查重"],
+        "summary": "获取查重结果",
+        "parameters": [
+          { "name": "check_id", "in": "query", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/plagiarism/run/{id}": {
+      "post": {
+        "tags": ["作品查重"],
+        "summary": "执行查重",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/round/create": {
+      "post": {
+        "tags": ["多轮评审"],
+        "summary": "创建评审轮次",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["contest_title", "round_number"],
+                "properties": {
+                  "contest_title": { "type": "string", "example": "2024年度教学竞赛" },
+                  "round_number": { "type": "integer", "example": 1 },
+                  "start_time": { "type": "string", "example": "2024-05-01 10:00:00" },
+                  "end_time": { "type": "string", "example": "2024-05-05 18:00:00" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/round/list": {
+      "get": {
+        "tags": ["多轮评审"],
+        "summary": "获取评审轮次列表",
+        "parameters": [
+          { "name": "contest_title", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/round/detail/{id}": {
+      "get": {
+        "tags": ["多轮评审"],
+        "summary": "获取轮次详情",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/round/status": {
+      "put": {
+        "tags": ["多轮评审"],
+        "summary": "更新轮次状态",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id", "status"],
+                "properties": {
+                  "id": { "type": "integer", "example": 1 },
+                  "status": { "type": "string", "enum": ["pending", "ongoing", "completed"], "example": "ongoing" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/round/assign": {
+      "post": {
+        "tags": ["多轮评审"],
+        "summary": "分配评审任务",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["round_id", "reviewer_ids"],
+                "properties": {
+                  "round_id": { "type": "integer", "example": 1 },
+                  "reviewer_ids": { "type": "array", "items": { "type": "integer" }, "example": [2, 3, 4] }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/round/reviews": {
+      "get": {
+        "tags": ["多轮评审"],
+        "summary": "获取轮次评审任务",
+        "parameters": [
+          { "name": "round_id", "in": "query", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/round/tasks": {
+      "get": {
+        "tags": ["多轮评审"],
+        "summary": "获取评审员任务",
+        "parameters": [
+          { "name": "round_id", "in": "query", "required": true, "schema": { "type": "integer" } },
+          { "name": "reviewer_id", "in": "query", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/round/submit": {
+      "post": {
+        "tags": ["多轮评审"],
+        "summary": "提交评审评分",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id", "score"],
+                "properties": {
+                  "id": { "type": "integer", "example": 1 },
+                  "score": { "type": "integer", "minimum": 0, "maximum": 100, "example": 85 },
+                  "comment": { "type": "string", "example": "教学设计优秀" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/round/progress": {
+      "get": {
+        "tags": ["多轮评审"],
+        "summary": "查询轮次进度",
+        "parameters": [
+          { "name": "round_id", "in": "query", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/round/results": {
+      "get": {
+        "tags": ["多轮评审"],
+        "summary": "获取轮次评审结果",
+        "parameters": [
+          { "name": "round_id", "in": "query", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "成功" } }
+      }
+    }
+  }
+}

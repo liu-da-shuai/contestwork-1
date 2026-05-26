@@ -25,5 +25,11 @@ func InitMySQL() {
 		&entity.SignUp{},
 		&entity.Review{},
 		&entity.Award{},
+		&entity.Attachment{},
+		&entity.BlindReview{},
+		&entity.PlagiarismCheck{},
+		&entity.PlagiarismResult{},
+		&entity.ReviewRound{},
+		&entity.RoundReview{},
 	)
 }

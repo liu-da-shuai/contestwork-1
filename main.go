@@ -13,13 +13,7 @@ import (
 )
 
 func main() {
-	//初始化MySQL
 	config.InitMySQL()
-
-	//初始化Redis
-	config.InitRedis()
-
-	//初始化路由
 	r := router.InitRouter()
 	_ = r.Run(":8080")
 }
